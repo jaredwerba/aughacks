@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeuroLM Video Experiment Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="dashboard">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1>🧠 NeuroLM Video Experiment Dashboard</h1>
+                <div class="status-indicator">
+                    <span class="status-dot" id="connectionStatus"></span>
+                    <span id="connectionText">Connecting...</span>
+                </div>
+            </div>
+        </header>
+
+        <main class="main-layout">
+            <!-- Left Panel: Metrics Quadrant -->
+            <aside class="metrics-panel">
+                <div class="panel-header">
+                    <h2>📊 Real-time Metrics Quadrant</h2>
+                    <div class="current-video" id="currentVideo">No video loaded</div>
+                </div>
+                
+                <!-- 2D Metrics Quadrant Visualization -->
+                <div class="metrics-2d-quadrant">
+                    <h3>📊 2D Metrics Space</h3>
+                    <div class="quadrant-chart-container">
+                        <canvas id="metricsQuadrantChart"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Current Metrics Values -->
+                <div class="current-metrics">
+                    <div class="metric-row">
+                        <span class="metric-label">👁️ Attention:</span>
+                        <span class="metric-value" id="attentionValue">0.000</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">💚 Engagement:</span>
+                        <span class="metric-value" id="engagementValue">0.000</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">🧠 Workload:</span>
+                        <span class="metric-value" id="workloadValue">0.000</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">⚡ Alpha/Theta:</span>
+                        <span class="metric-value" id="alphaTheta">0.000</span>
+                    </div>
+                </div>
+                
+                <!-- Video Comparison History -->
+                <div class="video-history">
+                    <h3>📈 Video Comparison</h3>
+                    <div id="videoComparisonList" class="comparison-list">
+                        <div class="comparison-item">
+                            <span class="video-name">No videos tested yet</span>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Right Panel: Video and Controls -->
+            <section class="video-section">
+                <div class="video-container">
+                    <div class="video-wrapper">
+                        <video id="experimentVideo" controls style="display: none;">
+                            <source src="" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+                        <iframe id="youtubeVideo" style="display: none;" frameborder="0" allowfullscreen></iframe>
+                        <div id="videoPlaceholder" class="video-placeholder">
+                            <div class="placeholder-content">
+                                <h3>📺 No Video Selected</h3>
+                                <p>Upload a video file or enter a YouTube URL</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="video-controls">
+                    <div class="control-group">
+                        <label>📺 YouTube URL:</label>
+                        <input type="url" id="youtubeUrl" placeholder="https://www.youtube.com/watch?v=...">
+                        <button id="loadYouTubeBtn">Load Video</button>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="segment-duration">Segment Duration</label>
+                        <select id="segment-duration">
+                            <option value="5">5 seconds</option>
+                            <option value="10" selected>10 seconds</option>
+                            <option value="30">30 seconds</option>
+                        </select>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="eeg-source">EEG Source</label>
+                        <select id="eeg-source">
+                            <option value="lsl">LSL Stream</option>
+                            <option value="simulator" selected>Simulator</option>
+                        </select>
+                    </div>
+                    
+                    <div class="control-group">
+                        <button id="startExperiment" class="btn btn-primary">🎬 Start Experiment</button>
+                        <button id="stopExperiment" class="btn btn-danger">⏹️ Stop</button>
+                        <button id="export-data" class="btn btn-success">📥 Export Data</button>
+                    </div>
+                </div>
+            </section>
+        </main>
+        
+        <!-- Bottom Section: Real-time Charts -->
+        <section class="charts-section">
+            <div class="charts-container">
+                <div class="chart-panel">
+                    <h3>📈 Attention & Engagement Timeline</h3>
+                    <canvas id="metricsTimelineChart"></canvas>
+                </div>
+                
+                <div class="chart-panel">
+                    <h3>🧠 EEG Channels (Fp1, Fp2, C3, C4, P7, P8, O1, O2)</h3>
+                    <canvas id="eegChannelsChart"></canvas>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Experiment Log -->
+        <div class="log-panel">
+            <h3>📋 Experiment Log</h3>
+            <div id="experiment-log" class="log-content">
+                <div class="log-entry">
+                    <span class="timestamp">00:00:00</span>
+                    <span class="message">Dashboard initialized</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="footer-content">
+                <p>&copy; 2025 NeuroLM Video Experiment Dashboard | Real-time EEG Analysis</p>
+                <div class="connection-info">
+                    <span id="websocket-status">WebSocket: Disconnected</span>
+                    <span id="processing-time">Processing: 0ms</span>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Scripts -->
+    <script src="dashboard.js"></script>
+</body>
+</html>
