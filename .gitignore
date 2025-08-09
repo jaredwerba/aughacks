@@ -1,0 +1,36 @@
+# Large dataset files
+mendeley_data/
+realtime_output/
+neurolm_checkpoints/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Model files
+*.pt
+*.pth
+*.bin
+*.safetensors
+
+# Logs
+*.log
