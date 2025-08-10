@@ -1,0 +1,1572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EEG Attention Model Statistics Report</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; margin: 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .container { max-width: 1800px; margin: 0 auto; padding: 20px; }
+        .header { background: rgba(255,255,255,0.95); border-radius: 20px; padding: 30px; margin-bottom: 30px; text-align: center; }
+        .header h1 { color: #667eea; font-size: 2.5em; margin-bottom: 10px; }
+        .controls { background: rgba(255,255,255,0.95); border-radius: 15px; padding: 20px; margin-bottom: 20px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: rgba(255,255,255,0.95); border-radius: 15px; padding: 20px; }
+        .stat-value { font-size: 1.8em; font-weight: bold; color: #667eea; }
+        .video-table { background: rgba(255,255,255,0.95); border-radius: 20px; padding: 25px; margin-bottom: 25px; }
+        .section-title { font-size: 1.5em; font-weight: 600; color: #667eea; margin-bottom: 20px; }
+        .viz-section { background: rgba(255,255,255,0.95); border-radius: 20px; padding: 25px; margin-bottom: 25px; }
+        .viz-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(500px, 1fr)); gap: 25px; }
+        .viz-container { background: #f8f9fa; border-radius: 10px; padding: 20px; }
+        .performance-tag { padding: 5px 10px; border-radius: 15px; color: white; font-size: 0.9em; font-weight: 600; }
+        .high-performance { background: #4caf50; }
+        .good-performance { background: #8bc34a; }
+        .moderate-performance { background: #ff9800; }
+        .low-performance { background: #f44336; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background: #f8f9fa; font-weight: 600; }
+        .control-group { margin-bottom: 15px; }
+        .control-group select { width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-brain"></i> EEG Attention Model Statistics</h1>
+            <p>Comprehensive Analysis of Attention Metrics Across Video Sessions</p>
+        </div>
+        
+        <div class="controls">
+            <div class="control-group">
+                <label><i class="fas fa-database"></i> Database:</label>
+                <select id="database-select" onchange="updateDisplay()">
+                    <option value="video_embeddings_5s">5s Fragments (High Resolution)</option>
+<option value="video_embeddings_20s">20s Fragments (Medium Resolution)</option>
+<option value="video_embeddings">Full Videos (Global Analysis)</option>
+                </select>
+            </div>
+        </div>
+        
+        <div id="summary-stats" class="stats-grid">
+            <!-- Dynamic summary stats will be populated here -->
+        </div>
+        
+        <div class="video-table">
+            <div class="section-title"><i class="fas fa-table"></i> Video Statistics Table</div>
+            <div id="video-stats-table"></div>
+        </div>
+        
+        <div class="viz-section">
+            <div class="section-title"><i class="fas fa-chart-line"></i> Attention Metrics Visualization</div>
+            <div class="viz-grid">
+                <div class="viz-container">
+                    <div style="font-weight: 600; margin-bottom: 15px; text-align: center;">📊 Focus vs Engagement by Video</div>
+                    <div id="focus-engagement-chart"></div>
+                </div>
+                <div class="viz-container">
+                    <div style="font-weight: 600; margin-bottom: 15px; text-align: center;">📈 Performance Distribution</div>
+                    <div id="performance-chart"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="viz-section">
+            <div class="section-title"><i class="fas fa-wave-square"></i> Brainwave Analysis</div>
+            <div class="viz-grid">
+                <div class="viz-container">
+                    <div style="font-weight: 600; margin-bottom: 15px; text-align: center;">🧠 Brainwave Power by Video</div>
+                    <div id="brainwave-chart"></div>
+                </div>
+                <div class="viz-container">
+                    <div style="font-weight: 600; margin-bottom: 15px; text-align: center;">⚡ Attention Stability</div>
+                    <div id="stability-chart"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const reportData = {
+  "databases": [
+    "video_embeddings_5s",
+    "video_embeddings_20s",
+    "video_embeddings"
+  ],
+  "video_stats": {
+    "video_embeddings_5s": {
+      "lsl_stream_20250809_154545": {
+        "video_id": "lsl_stream_20250809_154545",
+        "video_short": "154545",
+        "database": "video_embeddings_5s",
+        "total_fragments": 106,
+        "total_duration": 530.0,
+        "avg_fragment_duration": 5.0,
+        "focus_mean": 0.5937054620995065,
+        "focus_std": 0.20806617050277962,
+        "focus_min": 0.0,
+        "focus_max": 1.0,
+        "focus_median": 0.6166300300106227,
+        "focus_q25": 0.45979665727828967,
+        "focus_q75": 0.7106617043095752,
+        "engagement_mean": 0.0,
+        "engagement_std": 0.0,
+        "engagement_min": 0.0,
+        "engagement_max": 0.0,
+        "engagement_median": 0.0,
+        "engagement_q25": 0.0,
+        "engagement_q75": 0.0,
+        "alpha_mean": 0.0,
+        "beta_mean": 0.0,
+        "theta_mean": 0.0,
+        "gamma_mean": 0.0,
+        "meditation_mean": 0.0,
+        "mental_effort_mean": 0.0,
+        "cognitive_workload_mean": 0.0,
+        "alertness_mean": 0.70728884549569,
+        "drowsiness_mean": 0.0,
+        "stress_mean": 0.0,
+        "focus_trend": -0.00019147912479010714,
+        "engagement_trend": 0.0,
+        "focus_stability": 0.7414016742261321,
+        "engagement_stability": 0.0,
+        "focus_peaks": 32,
+        "engagement_peaks": 0,
+        "focus_engagement_corr": NaN,
+        "performance_category": "Moderate Performance",
+        "attention_profile": "Focus-Dominant"
+      },
+      "lsl_stream_20250809_155123": {
+        "video_id": "lsl_stream_20250809_155123",
+        "video_short": "155123",
+        "database": "video_embeddings_5s",
+        "total_fragments": 110,
+        "total_duration": 550.0,
+        "avg_fragment_duration": 5.0,
+        "focus_mean": 0.6207197870191705,
+        "focus_std": 0.2121985190919792,
+        "focus_min": 0.08347633840349196,
+        "focus_max": 1.0,
+        "focus_median": 0.599885359436207,
+        "focus_q25": 0.473583392702104,
+        "focus_q75": 0.7881543941190492,
+        "engagement_mean": 0.0,
+        "engagement_std": 0.0,
+        "engagement_min": 0.0,
+        "engagement_max": 0.0,
+        "engagement_median": 0.0,
+        "engagement_q25": 0.0,
+        "engagement_q75": 0.0,
+        "alpha_mean": 0.0,
+        "beta_mean": 0.0,
+        "theta_mean": 0.0,
+        "gamma_mean": 0.0,
+        "meditation_mean": 0.0,
+        "mental_effort_mean": 0.0,
+        "cognitive_workload_mean": 0.0,
+        "alertness_mean": 0.6926722219704452,
+        "drowsiness_mean": 0.0,
+        "stress_mean": 0.0,
+        "focus_trend": -0.0005123228073273524,
+        "engagement_trend": 0.0,
+        "focus_stability": 0.7461008704816714,
+        "engagement_stability": 0.0,
+        "focus_peaks": 34,
+        "engagement_peaks": 0,
+        "focus_engagement_corr": NaN,
+        "performance_category": "Moderate Performance",
+        "attention_profile": "Focus-Dominant"
+      },
+      "lsl_stream_20250809_155739": {
+        "video_id": "lsl_stream_20250809_155739",
+        "video_short": "155739",
+        "database": "video_embeddings_5s",
+        "total_fragments": 108,
+        "total_duration": 540.0,
+        "avg_fragment_duration": 5.0,
+        "focus_mean": 0.5838677476826879,
+        "focus_std": 0.2171695771520742,
+        "focus_min": 0.07802412445835324,
+        "focus_max": 1.0,
+        "focus_median": 0.5851081575043806,
+        "focus_q25": 0.4415522771577516,
+        "focus_q75": 0.7307639605424147,
+        "engagement_mean": 0.0,
+        "engagement_std": 0.0,
+        "engagement_min": 0.0,
+        "engagement_max": 0.0,
+        "engagement_median": 0.0,
+        "engagement_q25": 0.0,
+        "engagement_q75": 0.0,
+        "alpha_mean": 0.0,
+        "beta_mean": 0.0,
+        "theta_mean": 0.0,
+        "gamma_mean": 0.0,
+        "meditation_mean": 0.0,
+        "mental_effort_mean": 0.0,
+        "cognitive_workload_mean": 0.0,
+        "alertness_mean": 0.7140905308769709,
+        "drowsiness_mean": 0.0,
+        "stress_mean": 0.0,
+        "focus_trend": -0.0007660133083855001,
+        "engagement_trend": 0.0,
+        "focus_stability": 0.7298077073167993,
+        "engagement_stability": 0.0,
+        "focus_peaks": 32,
+        "engagement_peaks": 0,
+        "focus_engagement_corr": NaN,
+        "performance_category": "Moderate Performance",
+        "attention_profile": "Focus-Dominant"
+      },
+      "lsl_stream_20250809_160350": {
+        "video_id": "lsl_stream_20250809_160350",
+        "video_short": "160350",
+        "database": "video_embeddings_5s",
+        "total_fragments": 107,
+        "total_duration": 535.0,
+        "avg_fragment_duration": 5.0,
+        "focus_mean": 0.6082293150935475,
+        "focus_std": 0.2101383854061936,
+        "focus_min": 0.02692696229637995,
+        "focus_max": 1.0,
+        "focus_median": 0.6174903178775355,
+        "focus_q25": 0.5069108473063051,
+        "focus_q75": 0.7441580492278751,
+        "engagement_mean": 0.0,
+        "engagement_std": 0.0,
+        "engagement_min": 0.0,
+        "engagement_max": 0.0,
+        "engagement_median": 0.0,
+        "engagement_q25": 0.0,
+        "engagement_q75": 0.0,
+        "alpha_mean": 0.0,
+        "beta_mean": 0.0,
+        "theta_mean": 0.0,
+        "gamma_mean": 0.0,
+        "meditation_mean": 0.0,
+        "mental_effort_mean": 0.0,
+        "cognitive_workload_mean": 0.0,
+        "alertness_mean": 0.6737604673924876,
+        "drowsiness_mean": 0.0,
+        "stress_mean": 0.0,
+        "focus_trend": -0.0005782549017570103,
+        "engagement_trend": 0.0,
+        "focus_stability": 0.7441174913312385,
+        "engagement_stability": 0.0,
+        "focus_peaks": 36,
+        "engagement_peaks": 0,
+        "focus_engagement_corr": NaN,
+        "performance_category": "Moderate Performance",
+        "attention_profile": "Focus-Dominant"
+      },
+      "lsl_stream_20250809_173815": {
+        "video_id": "lsl_stream_20250809_173815",
+        "video_short": "173815",
+        "database": "video_embeddings_5s",
+        "total_fragments": 67,
+        "total_duration": 335.0,
+        "avg_fragment_duration": 5.0,
+        "focus_mean": 0.597920434440969,
+        "focus_std": 0.2283691492667427,
+        "focus_min": 0.0,
+        "focus_max": 1.0,
+        "focus_median": 0.5968641076751312,
+        "focus_q25": 0.44163894311490043,
+        "focus_q75": 0.7679861388862741,
+        "engagement_mean": 0.0,
+        "engagement_std": 0.0,
+        "engagement_min": 0.0,
+        "engagement_max": 0.0,
+        "engagement_median": 0.0,
+        "engagement_q25": 0.0,
+        "engagement_q75": 0.0,
+        "alpha_mean": 0.0,
+        "beta_mean": 0.0,
+        "theta_mean": 0.0,
+        "gamma_mean": 0.0,
+        "meditation_mean": 0.0,
+        "mental_effort_mean": 0.0,
+        "cognitive_workload_mean": 0.0,
+        "alertness_mean": 0.718157773638529,
+        "drowsiness_mean": 0.0,
+        "stress_mean": 0.0,
+        "focus_trend": 0.0005932889566615479,
+        "engagement_trend": 0.0,
+        "focus_stability": 0.7251221359199059,
+        "engagement_stability": 0.0,
+        "focus_peaks": 22,
+        "engagement_peaks": 0,
+        "focus_engagement_corr": NaN,
+        "performance_category": "Moderate Performance",
+        "attention_profile": "Focus-Dominant"
+      },
+      "lsl_stream_20250809_174138": {
+        "video_id": "lsl_stream_20250809_174138",
+        "video_short": "174138",
+        "database": "video_embeddings_5s",
+        "total_fragments": 119,
+        "total_duration": 595.0,
+        "avg_fragment_duration": 5.0,
+        "focus_mean": 0.601361945714913,
+        "focus_std": 0.2198146001608909,
+        "focus_min": 0.034131867166684475,
+        "focus_max": 1.0,
+        "focus_median": 0.6085476593284491,
+        "focus_q25": 0.4474902814703487,
+        "focus_q75": 0.7604260369360186,
+        "engagement_mean": 0.0,
+        "engagement_std": 0.0,
+        "engagement_min": 0.0,
+        "engagement_max": 0.0,
+        "engagement_median": 0.0,
+        "engagement_q25": 0.0,
+        "engagement_q75": 0.0,
+        "alpha_mean": 0.0,
+        "beta_mean": 0.0,
+        "theta_mean": 0.0,
+        "gamma_mean": 0.0,
+        "meditation_mean": 0.0,
+        "mental_effort_mean": 0.0,
+        "cognitive_workload_mean": 0.0,
+        "alertness_mean": 0.6948441620587009,
+        "drowsiness_mean": 0.0,
+        "stress_mean": 0.0,
+        "focus_trend": -0.00033198208288555056,
+        "engagement_trend": 0.0,
+        "focus_stability": 0.7331438070437438,
+        "engagement_stability": 0.0,
+        "focus_peaks": 36,
+        "engagement_peaks": 0,
+        "focus_engagement_corr": NaN,
+        "performance_category": "Moderate Performance",
+        "attention_profile": "Focus-Dominant"
+      },
+      "lsl_stream_20250809_174635": {
+        "video_id": "lsl_stream_20250809_174635",
+        "video_short": "174635",
+        "database": "video_embeddings_5s",
+        "total_fragments": 119,
+        "total_duration": 595.0,
+        "avg_fragment_duration": 5.0,
+        "focus_mean": 0.5974908375417418,
+        "focus_std": 0.21567584472696855,
+        "focus_min": 0.030147990822966837,
+        "focus_max": 1.0,
+        "focus_median": 0.6088937933346865,
+        "focus_q25": 0.4804993069041348,
+        "focus_q75": 0.7316145449924155,
+        "engagement_mean": 0.0,
+        "engagement_std": 0.0,
+        "engagement_min": 0.0,
+        "engagement_max": 0.0,
+        "engagement_median": 0.0,
+        "engagement_q25": 0.0,
+        "engagement_q75": 0.0,
+        "alpha_mean": 0.0,
+        "beta_mean": 0.0,
+        "theta_mean": 0.0,
+        "gamma_mean": 0.0,
+        "meditation_mean": 0.0,
+        "mental_effort_mean": 0.0,
+        "cognitive_workload_mean": 0.0,
+        "alertness_mean": 0.7198817089447799,
+        "drowsiness_mean": 0.0,
+        "stress_mean": 0.0,
+        "focus_trend": -0.00012562972188275787,
+        "engagement_trend": 0.0,
+        "focus_stability": 0.7355919162191829,
+        "engagement_stability": 0.0,
+        "focus_peaks": 39,
+        "engagement_peaks": 0,
+        "focus_engagement_corr": NaN,
+        "performance_category": "Moderate Performance",
+        "attention_profile": "Focus-Dominant"
+      },
+      "lsl_stream_20250809_175111": {
+        "video_id": "lsl_stream_20250809_175111",
+        "video_short": "175111",
+        "database": "video_embeddings_5s",
+        "total_fragments": 119,
+        "total_duration": 595.0,
+        "avg_fragment_duration": 5.0,
+        "focus_mean": 0.6103930118460843,
+        "focus_std": 0.19429416036644173,
+        "focus_min": 0.14883730549554702,
+        "focus_max": 1.0,
+        "focus_median": 0.5999530343270447,
+        "focus_q25": 0.487028306102277,
+        "focus_q75": 0.7512473758734417,
+        "engagement_mean": 0.0,
+        "engagement_std": 0.0,
+        "engagement_min": 0.0,
+        "engagement_max": 0.0,
+        "engagement_median": 0.0,
+        "engagement_q25": 0.0,
+        "engagement_q75": 0.0,
+        "alpha_mean": 0.0,
+        "beta_mean": 0.0,
+        "theta_mean": 0.0,
+        "gamma_mean": 0.0,
+        "meditation_mean": 0.0,
+        "mental_effort_mean": 0.0,
+        "cognitive_workload_mean": 0.0,
+        "alertness_mean": 0.6926093076190506,
+        "drowsiness_mean": 0.0,
+        "stress_mean": 0.0,
+        "focus_trend": -0.0006641704270994823,
+        "engagement_trend": 0.0,
+        "focus_stability": 0.7593189252217519,
+        "engagement_stability": 0.0,
+        "focus_peaks": 41,
+        "engagement_peaks": 0,
+        "focus_engagement_corr": NaN,
+        "performance_category": "Moderate Performance",
+        "attention_profile": "Focus-Dominant"
+      },
+      "lsl_stream_20250809_175524": {
+        "video_id": "lsl_stream_20250809_175524",
+        "video_short": "175524",
+        "database": "video_embeddings_5s",
+        "total_fragments": 22,
+        "total_duration": 110.0,
+        "avg_fragment_duration": 5.0,
+        "focus_mean": 0.5751957147228061,
+        "focus_std": 0.21035341483988593,
+        "focus_min": 0.14741760506551885,
+        "focus_max": 0.8990456015208544,
+        "focus_median": 0.6036287639623159,
+        "focus_q25": 0.4295535518642424,
+        "focus_q75": 0.7509223283561395,
+        "engagement_mean": 0.0,
+        "engagement_std": 0.0,
+        "engagement_min": 0.0,
+        "engagement_max": 0.0,
+        "engagement_median": 0.0,
+        "engagement_q25": 0.0,
+        "engagement_q75": 0.0,
+        "alpha_mean": 0.0,
+        "beta_mean": 0.0,
+        "theta_mean": 0.0,
+        "gamma_mean": 0.0,
+        "meditation_mean": 0.0,
+        "mental_effort_mean": 0.0,
+        "cognitive_workload_mean": 0.0,
+        "alertness_mean": 0.7490723711987702,
+        "drowsiness_mean": 0.0,
+        "stress_mean": 0.0,
+        "focus_trend": -0.009409794859570294,
+        "engagement_trend": 0.0,
+        "focus_stability": 0.7367571468847941,
+        "engagement_stability": 0.0,
+        "focus_peaks": 7,
+        "engagement_peaks": 0,
+        "focus_engagement_corr": NaN,
+        "performance_category": "Moderate Performance",
+        "attention_profile": "Focus-Dominant"
+      },
+      "lsl_stream_20250809_175632": {
+        "video_id": "lsl_stream_20250809_175632",
+        "video_short": "175632",
+        "database": "video_embeddings_5s",
+        "total_fragments": 119,
+        "total_duration": 595.0,
+        "avg_fragment_duration": 5.0,
+        "focus_mean": 0.5915628504071069,
+        "focus_std": 0.21491610255243399,
+        "focus_min": 0.09026374106407865,
+        "focus_max": 1.0,
+        "focus_median": 0.6201866392354985,
+        "focus_q25": 0.446096632268585,
+        "focus_q75": 0.7537692025236125,
+        "engagement_mean": 0.0,
+        "engagement_std": 0.0,
+        "engagement_min": 0.0,
+        "engagement_max": 0.0,
+        "engagement_median": 0.0,
+        "engagement_q25": 0.0,
+        "engagement_q75": 0.0,
+        "alpha_mean": 0.0,
+        "beta_mean": 0.0,
+        "theta_mean": 0.0,
+        "gamma_mean": 0.0,
+        "meditation_mean": 0.0,
+        "mental_effort_mean": 0.0,
+        "cognitive_workload_mean": 0.0,
+        "alertness_mean": 0.698199475030808,
+        "drowsiness_mean": 0.0,
+        "stress_mean": 0.0,
+        "focus_trend": 0.0002676850070200551,
+        "engagement_trend": 0.0,
+        "focus_stability": 0.7343370338942788,
+        "engagement_stability": 0.0,
+        "focus_peaks": 36,
+        "engagement_peaks": 0,
+        "focus_engagement_corr": NaN,
+        "performance_category": "Moderate Performance",
+        "attention_profile": "Focus-Dominant"
+      }
+    },
+    "video_embeddings_20s": {
+      "lsl_stream_20250809_154545": {
+        "video_id": "lsl_stream_20250809_154545",
+        "video_short": "154545",
+        "database": "video_embeddings_20s",
+        "total_fragments": 26,
+        "total_duration": 520.0,
+        "avg_fragment_duration": 20.0,
+        "focus_mean": 0.6533727634511468,
+        "focus_std": 0.20138089247294436,
+        "focus_min": 0.1043567044854112,
+        "focus_max": 1.0,
+        "focus_median": 0.6629598689711429,
+        "focus_q25": 0.5164386481432608,
+        "focus_q75": 0.7498319471160256,
+        "engagement_mean": 0.0,
+        "engagement_std": 0.0,
+        "engagement_min": 0.0,
+        "engagement_max": 0.0,
+        "engagement_median": 0.0,
+        "engagement_q25": 0.0,
+        "engagement_q75": 0.0,
+        "alpha_mean": 0.0,
+        "beta_mean": 0.0,
+        "theta_mean": 0.0,
+        "gamma_mean": 0.0,
+        "meditation_mean": 0.0,
+        "mental_effort_mean": 0.0,
+        "cognitive_workload_mean": 0.0,
+        "alertness_mean": 0.6522489065502207,
+        "drowsiness_mean": 0.0,
+        "stress_mean": 0.0,
+        "focus_trend": -0.004201878533965166,
+        "engagement_trend": 0.0,
+        "focus_stability": 0.7679122735924087,
+        "engagement_stability": 0.0,
+        "focus_peaks": 7,
+        "engagement_peaks": 0,
+        "focus_engagement_corr": NaN,
+        "performance_category": "Moderate Performance",
+        "attention_profile": "Focus-Dominant"
+      },
+      "lsl_stream_20250809_155123": {
+        "video_id": "lsl_stream_20250809_155123",
+        "video_short": "155123",
+        "database": "video_embeddings_20s",
+        "total_fragments": 27,
+        "total_duration": 540.0,
+        "avg_fragment_duration": 20.0,
+        "focus_mean": 0.6600249282903896,
+        "focus_std": 0.20661069047251784,
+        "focus_min": 0.17777081543850448,
+        "focus_max": 0.9939040094473613,
+        "focus_median": 0.6726445607413769,
+        "focus_q25": 0.5159956788252997,
+        "focus_q75": 0.8106258743575042,
+        "engagement_mean": 0.0,
+        "engagement_std": 0.0,
+        "engagement_min": 0.0,
+        "engagement_max": 0.0,
+        "engagement_median": 0.0,
+        "engagement_q25": 0.0,
+        "engagement_q75": 0.0,
+        "alpha_mean": 0.0,
+        "beta_mean": 0.0,
+        "theta_mean": 0.0,
+        "gamma_mean": 0.0,
+        "meditation_mean": 0.0,
+        "mental_effort_mean": 0.0,
+        "cognitive_workload_mean": 0.0,
+        "alertness_mean": 0.7334660981859203,
+        "drowsiness_mean": 0.0,
+        "stress_mean": 0.0,
+        "focus_trend": 0.0037092301410936754,
+        "engagement_trend": 0.0,
+        "focus_stability": 0.7650038019721549,
+        "engagement_stability": 0.0,
+        "focus_peaks": 10,
+        "engagement_peaks": 0,
+        "focus_engagement_corr": NaN,
+        "performance_category": "Moderate Performance",
+        "attention_profile": "Focus-Dominant"
+      },
+      "lsl_stream_20250809_155739": {
+        "video_id": "lsl_stream_20250809_155739",
+        "video_short": "155739",
+        "database": "video_embeddings_20s",
+        "total_fragments": 27,
+        "total_duration": 540.0,
+        "avg_fragment_duration": 20.0,
+        "focus_mean": 0.5647622252829072,
+        "focus_std": 0.19451911191194043,
+        "focus_min": 0.23374401393277333,
+        "focus_max": 0.9296678450021727,
+        "focus_median": 0.6003622221312205,
+        "focus_q25": 0.43412521608190596,
+        "focus_q75": 0.7018817296161208,
+        "engagement_mean": 0.0,
+        "engagement_std": 0.0,
+        "engagement_min": 0.0,
+        "engagement_max": 0.0,
+        "engagement_median": 0.0,
+        "engagement_q25": 0.0,
+        "engagement_q75": 0.0,
+        "alpha_mean": 0.0,
+        "beta_mean": 0.0,
+        "theta_mean": 0.0,
+        "gamma_mean": 0.0,
+        "meditation_mean": 0.0,
+        "mental_effort_mean": 0.0,
+        "cognitive_workload_mean": 0.0,
+        "alertness_mean": 0.7261984366097847,
+        "drowsiness_mean": 0.0,
+        "stress_mean": 0.0,
+        "focus_trend": 0.0030583000982067374,
+        "engagement_trend": 0.0,
+        "focus_stability": 0.7473907941848847,
+        "engagement_stability": 0.0,
+        "focus_peaks": 9,
+        "engagement_peaks": 0,
+        "focus_engagement_corr": NaN,
+        "performance_category": "Moderate Performance",
+        "attention_profile": "Focus-Dominant"
+      },
+      "lsl_stream_20250809_160350": {
+        "video_id": "lsl_stream_20250809_160350",
+        "video_short": "160350",
+        "database": "video_embeddings_20s",
+        "total_fragments": 26,
+        "total_duration": 520.0,
+        "avg_fragment_duration": 20.0,
+        "focus_mean": 0.5936617284442726,
+        "focus_std": 0.22532856646375668,
+        "focus_min": 0.10590761225146308,
+        "focus_max": 1.0,
+        "focus_median": 0.6215997068253744,
+        "focus_q25": 0.45831918617226625,
+        "focus_q75": 0.757724104216597,
+        "engagement_mean": 0.0,
+        "engagement_std": 0.0,
+        "engagement_min": 0.0,
+        "engagement_max": 0.0,
+        "engagement_median": 0.0,
+        "engagement_q25": 0.0,
+        "engagement_q75": 0.0,
+        "alpha_mean": 0.0,
+        "beta_mean": 0.0,
+        "theta_mean": 0.0,
+        "gamma_mean": 0.0,
+        "meditation_mean": 0.0,
+        "mental_effort_mean": 0.0,
+        "cognitive_workload_mean": 0.0,
+        "alertness_mean": 0.7176078655221546,
+        "drowsiness_mean": 0.0,
+        "stress_mean": 0.0,
+        "focus_trend": 0.0009058593238022815,
+        "engagement_trend": 0.0,
+        "focus_stability": 0.7287639491495846,
+        "engagement_stability": 0.0,
+        "focus_peaks": 8,
+        "engagement_peaks": 0,
+        "focus_engagement_corr": NaN,
+        "performance_category": "Moderate Performance",
+        "attention_profile": "Focus-Dominant"
+      },
+      "lsl_stream_20250809_173815": {
+        "video_id": "lsl_stream_20250809_173815",
+        "video_short": "173815",
+        "database": "video_embeddings_20s",
+        "total_fragments": 16,
+        "total_duration": 320.0,
+        "avg_fragment_duration": 20.0,
+        "focus_mean": 0.6130238003068266,
+        "focus_std": 0.24927807749495753,
+        "focus_min": 0.11190133660758608,
+        "focus_max": 1.0,
+        "focus_median": 0.6738176880743953,
+        "focus_q25": 0.4274093371651041,
+        "focus_q75": 0.763006412956067,
+        "engagement_mean": 0.0,
+        "engagement_std": 0.0,
+        "engagement_min": 0.0,
+        "engagement_max": 0.0,
+        "engagement_median": 0.0,
+        "engagement_q25": 0.0,
+        "engagement_q75": 0.0,
+        "alpha_mean": 0.0,
+        "beta_mean": 0.0,
+        "theta_mean": 0.0,
+        "gamma_mean": 0.0,
+        "meditation_mean": 0.0,
+        "mental_effort_mean": 0.0,
+        "cognitive_workload_mean": 0.0,
+        "alertness_mean": 0.7306190634751955,
+        "drowsiness_mean": 0.0,
+        "stress_mean": 0.0,
+        "focus_trend": -0.019528459423486265,
+        "engagement_trend": 0.0,
+        "focus_stability": 0.7175019406329275,
+        "engagement_stability": 0.0,
+        "focus_peaks": 4,
+        "engagement_peaks": 0,
+        "focus_engagement_corr": NaN,
+        "performance_category": "Moderate Performance",
+        "attention_profile": "Focus-Dominant"
+      },
+      "lsl_stream_20250809_174138": {
+        "video_id": "lsl_stream_20250809_174138",
+        "video_short": "174138",
+        "database": "video_embeddings_20s",
+        "total_fragments": 29,
+        "total_duration": 580.0,
+        "avg_fragment_duration": 20.0,
+        "focus_mean": 0.6230626567226621,
+        "focus_std": 0.20059594325767585,
+        "focus_min": 0.14538466993881727,
+        "focus_max": 0.9163380089028348,
+        "focus_median": 0.6201753548718575,
+        "focus_q25": 0.5030629878277396,
+        "focus_q75": 0.7636605202487966,
+        "engagement_mean": 0.0,
+        "engagement_std": 0.0,
+        "engagement_min": 0.0,
+        "engagement_max": 0.0,
+        "engagement_median": 0.0,
+        "engagement_q25": 0.0,
+        "engagement_q75": 0.0,
+        "alpha_mean": 0.0,
+        "beta_mean": 0.0,
+        "theta_mean": 0.0,
+        "gamma_mean": 0.0,
+        "meditation_mean": 0.0,
+        "mental_effort_mean": 0.0,
+        "cognitive_workload_mean": 0.0,
+        "alertness_mean": 0.6986662862142393,
+        "drowsiness_mean": 0.0,
+        "stress_mean": 0.0,
+        "focus_trend": -0.0016378438799585862,
+        "engagement_trend": 0.0,
+        "focus_stability": 0.7596752843791637,
+        "engagement_stability": 0.0,
+        "focus_peaks": 8,
+        "engagement_peaks": 0,
+        "focus_engagement_corr": NaN,
+        "performance_category": "Moderate Performance",
+        "attention_profile": "Focus-Dominant"
+      },
+      "lsl_stream_20250809_174635": {
+        "video_id": "lsl_stream_20250809_174635",
+        "video_short": "174635",
+        "database": "video_embeddings_20s",
+        "total_fragments": 29,
+        "total_duration": 580.0,
+        "avg_fragment_duration": 20.0,
+        "focus_mean": 0.5468235828994871,
+        "focus_std": 0.20250282089020144,
+        "focus_min": 0.1344838765509852,
+        "focus_max": 0.994940425567865,
+        "focus_median": 0.5255234660546177,
+        "focus_q25": 0.4135029066602514,
+        "focus_q75": 0.7106158855508758,
+        "engagement_mean": 0.0,
+        "engagement_std": 0.0,
+        "engagement_min": 0.0,
+        "engagement_max": 0.0,
+        "engagement_median": 0.0,
+        "engagement_q25": 0.0,
+        "engagement_q75": 0.0,
+        "alpha_mean": 0.0,
+        "beta_mean": 0.0,
+        "theta_mean": 0.0,
+        "gamma_mean": 0.0,
+        "meditation_mean": 0.0,
+        "mental_effort_mean": 0.0,
+        "cognitive_workload_mean": 0.0,
+        "alertness_mean": 0.752187851120415,
+        "drowsiness_mean": 0.0,
+        "stress_mean": 0.0,
+        "focus_trend": -0.001181096743402139,
+        "engagement_trend": 0.0,
+        "focus_stability": 0.7331997797462384,
+        "engagement_stability": 0.0,
+        "focus_peaks": 8,
+        "engagement_peaks": 0,
+        "focus_engagement_corr": NaN,
+        "performance_category": "Moderate Performance",
+        "attention_profile": "Focus-Dominant"
+      },
+      "lsl_stream_20250809_175111": {
+        "video_id": "lsl_stream_20250809_175111",
+        "video_short": "175111",
+        "database": "video_embeddings_20s",
+        "total_fragments": 29,
+        "total_duration": 580.0,
+        "avg_fragment_duration": 20.0,
+        "focus_mean": 0.5769505506776177,
+        "focus_std": 0.18672280260975976,
+        "focus_min": 0.24174127366824275,
+        "focus_max": 0.920354361782196,
+        "focus_median": 0.5643620221725729,
+        "focus_q25": 0.4495705505171411,
+        "focus_q75": 0.7116924327058212,
+        "engagement_mean": 0.0,
+        "engagement_std": 0.0,
+        "engagement_min": 0.0,
+        "engagement_max": 0.0,
+        "engagement_median": 0.0,
+        "engagement_q25": 0.0,
+        "engagement_q75": 0.0,
+        "alpha_mean": 0.0,
+        "beta_mean": 0.0,
+        "theta_mean": 0.0,
+        "gamma_mean": 0.0,
+        "meditation_mean": 0.0,
+        "mental_effort_mean": 0.0,
+        "cognitive_workload_mean": 0.0,
+        "alertness_mean": 0.6746570558505379,
+        "drowsiness_mean": 0.0,
+        "stress_mean": 0.0,
+        "focus_trend": -5.4004385670925954e-05,
+        "engagement_trend": 0.0,
+        "focus_stability": 0.7587204257760862,
+        "engagement_stability": 0.0,
+        "focus_peaks": 10,
+        "engagement_peaks": 0,
+        "focus_engagement_corr": NaN,
+        "performance_category": "Moderate Performance",
+        "attention_profile": "Focus-Dominant"
+      },
+      "lsl_stream_20250809_175524": {
+        "video_id": "lsl_stream_20250809_175524",
+        "video_short": "175524",
+        "database": "video_embeddings_20s",
+        "total_fragments": 5,
+        "total_duration": 100.0,
+        "avg_fragment_duration": 20.0,
+        "focus_mean": 0.6197579619430689,
+        "focus_std": 0.24304204931546636,
+        "focus_min": 0.3850527684844868,
+        "focus_max": 1.0,
+        "focus_median": 0.5233319468756114,
+        "focus_q25": 0.4809587236480083,
+        "focus_q75": 0.7094463707072376,
+        "engagement_mean": 0.0,
+        "engagement_std": 0.0,
+        "engagement_min": 0.0,
+        "engagement_max": 0.0,
+        "engagement_median": 0.0,
+        "engagement_q25": 0.0,
+        "engagement_q75": 0.0,
+        "alpha_mean": 0.0,
+        "beta_mean": 0.0,
+        "theta_mean": 0.0,
+        "gamma_mean": 0.0,
+        "meditation_mean": 0.0,
+        "mental_effort_mean": 0.0,
+        "cognitive_workload_mean": 0.0,
+        "alertness_mean": 0.587602257552523,
+        "drowsiness_mean": 0.0,
+        "stress_mean": 0.0,
+        "focus_trend": -0.12241969765356098,
+        "engagement_trend": 0.0,
+        "focus_stability": 0.7403265173464018,
+        "engagement_stability": 0.0,
+        "focus_peaks": 1,
+        "engagement_peaks": 0,
+        "focus_engagement_corr": NaN,
+        "performance_category": "Moderate Performance",
+        "attention_profile": "Focus-Dominant"
+      },
+      "lsl_stream_20250809_175632": {
+        "video_id": "lsl_stream_20250809_175632",
+        "video_short": "175632",
+        "database": "video_embeddings_20s",
+        "total_fragments": 29,
+        "total_duration": 580.0,
+        "avg_fragment_duration": 20.0,
+        "focus_mean": 0.5999925670202851,
+        "focus_std": 0.20028558230110377,
+        "focus_min": 0.2352741619613604,
+        "focus_max": 1.0,
+        "focus_median": 0.5862718712441375,
+        "focus_q25": 0.5016230020308616,
+        "focus_q75": 0.6994288244384422,
+        "engagement_mean": 0.0,
+        "engagement_std": 0.0,
+        "engagement_min": 0.0,
+        "engagement_max": 0.0,
+        "engagement_median": 0.0,
+        "engagement_q25": 0.0,
+        "engagement_q75": 0.0,
+        "alpha_mean": 0.0,
+        "beta_mean": 0.0,
+        "theta_mean": 0.0,
+        "gamma_mean": 0.0,
+        "meditation_mean": 0.0,
+        "mental_effort_mean": 0.0,
+        "cognitive_workload_mean": 0.0,
+        "alertness_mean": 0.7124115281876976,
+        "drowsiness_mean": 0.0,
+        "stress_mean": 0.0,
+        "focus_trend": 0.007347178955465548,
+        "engagement_trend": 0.0,
+        "focus_stability": 0.7530077698809148,
+        "engagement_stability": 0.0,
+        "focus_peaks": 8,
+        "engagement_peaks": 0,
+        "focus_engagement_corr": NaN,
+        "performance_category": "Moderate Performance",
+        "attention_profile": "Focus-Dominant"
+      }
+    },
+    "video_embeddings": {
+      "lsl_stream_20250809_154545": {
+        "video_id": "lsl_stream_20250809_154545",
+        "video_short": "154545",
+        "database": "video_embeddings",
+        "total_fragments": 1,
+        "total_duration": 533.248,
+        "avg_fragment_duration": 533.248,
+        "focus_mean": 0.5692913136114846,
+        "focus_std": NaN,
+        "focus_min": 0.5692913136114846,
+        "focus_max": 0.5692913136114846,
+        "focus_median": 0.5692913136114846,
+        "focus_q25": 0.5692913136114846,
+        "focus_q75": 0.5692913136114846,
+        "engagement_mean": 0.0,
+        "engagement_std": NaN,
+        "engagement_min": 0.0,
+        "engagement_max": 0.0,
+        "engagement_median": 0.0,
+        "engagement_q25": 0.0,
+        "engagement_q75": 0.0,
+        "alpha_mean": 0.0,
+        "beta_mean": 0.0,
+        "theta_mean": 0.0,
+        "gamma_mean": 0.0,
+        "meditation_mean": 0.0,
+        "mental_effort_mean": 0.0,
+        "cognitive_workload_mean": 0.0,
+        "alertness_mean": 0.8545271109878547,
+        "drowsiness_mean": 0.0,
+        "stress_mean": 0.0,
+        "focus_trend": 0.0,
+        "engagement_trend": 0.0,
+        "focus_stability": 1.0,
+        "engagement_stability": 0.0,
+        "focus_peaks": 0,
+        "engagement_peaks": 0,
+        "focus_engagement_corr": NaN,
+        "performance_category": "Moderate Performance",
+        "attention_profile": "Focus-Dominant"
+      },
+      "lsl_stream_20250809_155123": {
+        "video_id": "lsl_stream_20250809_155123",
+        "video_short": "155123",
+        "database": "video_embeddings",
+        "total_fragments": 1,
+        "total_duration": 554.336,
+        "avg_fragment_duration": 554.336,
+        "focus_mean": 0.356701279198956,
+        "focus_std": NaN,
+        "focus_min": 0.356701279198956,
+        "focus_max": 0.356701279198956,
+        "focus_median": 0.356701279198956,
+        "focus_q25": 0.356701279198956,
+        "focus_q75": 0.356701279198956,
+        "engagement_mean": 0.0,
+        "engagement_std": NaN,
+        "engagement_min": 0.0,
+        "engagement_max": 0.0,
+        "engagement_median": 0.0,
+        "engagement_q25": 0.0,
+        "engagement_q75": 0.0,
+        "alpha_mean": 0.0,
+        "beta_mean": 0.0,
+        "theta_mean": 0.0,
+        "gamma_mean": 0.0,
+        "meditation_mean": 0.0,
+        "mental_effort_mean": 0.0,
+        "cognitive_workload_mean": 0.0,
+        "alertness_mean": 0.9678833987528184,
+        "drowsiness_mean": 0.0,
+        "stress_mean": 0.0,
+        "focus_trend": 0.0,
+        "engagement_trend": 0.0,
+        "focus_stability": 1.0,
+        "engagement_stability": 0.0,
+        "focus_peaks": 0,
+        "engagement_peaks": 0,
+        "focus_engagement_corr": NaN,
+        "performance_category": "Moderate Performance",
+        "attention_profile": "Focus-Dominant"
+      },
+      "lsl_stream_20250809_155739": {
+        "video_id": "lsl_stream_20250809_155739",
+        "video_short": "155739",
+        "database": "video_embeddings",
+        "total_fragments": 1,
+        "total_duration": 541.312,
+        "avg_fragment_duration": 541.312,
+        "focus_mean": 0.7975705548532525,
+        "focus_std": NaN,
+        "focus_min": 0.7975705548532525,
+        "focus_max": 0.7975705548532525,
+        "focus_median": 0.7975705548532525,
+        "focus_q25": 0.7975705548532525,
+        "focus_q75": 0.7975705548532525,
+        "engagement_mean": 0.0,
+        "engagement_std": NaN,
+        "engagement_min": 0.0,
+        "engagement_max": 0.0,
+        "engagement_median": 0.0,
+        "engagement_q25": 0.0,
+        "engagement_q75": 0.0,
+        "alpha_mean": 0.0,
+        "beta_mean": 0.0,
+        "theta_mean": 0.0,
+        "gamma_mean": 0.0,
+        "meditation_mean": 0.0,
+        "mental_effort_mean": 0.0,
+        "cognitive_workload_mean": 0.0,
+        "alertness_mean": 0.654334647730945,
+        "drowsiness_mean": 0.0,
+        "stress_mean": 0.0,
+        "focus_trend": 0.0,
+        "engagement_trend": 0.0,
+        "focus_stability": 1.0,
+        "engagement_stability": 0.0,
+        "focus_peaks": 0,
+        "engagement_peaks": 0,
+        "focus_engagement_corr": NaN,
+        "performance_category": "Moderate Performance",
+        "attention_profile": "Focus-Dominant"
+      },
+      "lsl_stream_20250809_160350": {
+        "video_id": "lsl_stream_20250809_160350",
+        "video_short": "160350",
+        "database": "video_embeddings",
+        "total_fragments": 1,
+        "total_duration": 537.088,
+        "avg_fragment_duration": 537.088,
+        "focus_mean": 0.6286056026434506,
+        "focus_std": NaN,
+        "focus_min": 0.6286056026434506,
+        "focus_max": 0.6286056026434506,
+        "focus_median": 0.6286056026434506,
+        "focus_q25": 0.6286056026434506,
+        "focus_q75": 0.6286056026434506,
+        "engagement_mean": 0.0,
+        "engagement_std": NaN,
+        "engagement_min": 0.0,
+        "engagement_max": 0.0,
+        "engagement_median": 0.0,
+        "engagement_q25": 0.0,
+        "engagement_q75": 0.0,
+        "alpha_mean": 0.0,
+        "beta_mean": 0.0,
+        "theta_mean": 0.0,
+        "gamma_mean": 0.0,
+        "meditation_mean": 0.0,
+        "mental_effort_mean": 0.0,
+        "cognitive_workload_mean": 0.0,
+        "alertness_mean": 0.5233400513618448,
+        "drowsiness_mean": 0.0,
+        "stress_mean": 0.0,
+        "focus_trend": 0.0,
+        "engagement_trend": 0.0,
+        "focus_stability": 1.0,
+        "engagement_stability": 0.0,
+        "focus_peaks": 0,
+        "engagement_peaks": 0,
+        "focus_engagement_corr": NaN,
+        "performance_category": "Moderate Performance",
+        "attention_profile": "Focus-Dominant"
+      },
+      "lsl_stream_20250809_173815": {
+        "video_id": "lsl_stream_20250809_173815",
+        "video_short": "173815",
+        "database": "video_embeddings",
+        "total_fragments": 1,
+        "total_duration": 339.68,
+        "avg_fragment_duration": 339.68,
+        "focus_mean": 0.7810134469650254,
+        "focus_std": NaN,
+        "focus_min": 0.7810134469650254,
+        "focus_max": 0.7810134469650254,
+        "focus_median": 0.7810134469650254,
+        "focus_q25": 0.7810134469650254,
+        "focus_q75": 0.7810134469650254,
+        "engagement_mean": 0.0,
+        "engagement_std": NaN,
+        "engagement_min": 0.0,
+        "engagement_max": 0.0,
+        "engagement_median": 0.0,
+        "engagement_q25": 0.0,
+        "engagement_q75": 0.0,
+        "alpha_mean": 0.0,
+        "beta_mean": 0.0,
+        "theta_mean": 0.0,
+        "gamma_mean": 0.0,
+        "meditation_mean": 0.0,
+        "mental_effort_mean": 0.0,
+        "cognitive_workload_mean": 0.0,
+        "alertness_mean": 0.6824148275827591,
+        "drowsiness_mean": 0.0,
+        "stress_mean": 0.0,
+        "focus_trend": 0.0,
+        "engagement_trend": 0.0,
+        "focus_stability": 1.0,
+        "engagement_stability": 0.0,
+        "focus_peaks": 0,
+        "engagement_peaks": 0,
+        "focus_engagement_corr": NaN,
+        "performance_category": "Moderate Performance",
+        "attention_profile": "Focus-Dominant"
+      },
+      "lsl_stream_20250809_174138": {
+        "video_id": "lsl_stream_20250809_174138",
+        "video_short": "174138",
+        "database": "video_embeddings",
+        "total_fragments": 1,
+        "total_duration": 598.72,
+        "avg_fragment_duration": 598.72,
+        "focus_mean": 0.7765749720932191,
+        "focus_std": NaN,
+        "focus_min": 0.7765749720932191,
+        "focus_max": 0.7765749720932191,
+        "focus_median": 0.7765749720932191,
+        "focus_q25": 0.7765749720932191,
+        "focus_q75": 0.7765749720932191,
+        "engagement_mean": 0.0,
+        "engagement_std": NaN,
+        "engagement_min": 0.0,
+        "engagement_max": 0.0,
+        "engagement_median": 0.0,
+        "engagement_q25": 0.0,
+        "engagement_q75": 0.0,
+        "alpha_mean": 0.0,
+        "beta_mean": 0.0,
+        "theta_mean": 0.0,
+        "gamma_mean": 0.0,
+        "meditation_mean": 0.0,
+        "mental_effort_mean": 0.0,
+        "cognitive_workload_mean": 0.0,
+        "alertness_mean": 0.7491196919816429,
+        "drowsiness_mean": 0.0,
+        "stress_mean": 0.0,
+        "focus_trend": 0.0,
+        "engagement_trend": 0.0,
+        "focus_stability": 1.0,
+        "engagement_stability": 0.0,
+        "focus_peaks": 0,
+        "engagement_peaks": 0,
+        "focus_engagement_corr": NaN,
+        "performance_category": "Moderate Performance",
+        "attention_profile": "Focus-Dominant"
+      },
+      "lsl_stream_20250809_174635": {
+        "video_id": "lsl_stream_20250809_174635",
+        "video_short": "174635",
+        "database": "video_embeddings",
+        "total_fragments": 1,
+        "total_duration": 595.392,
+        "avg_fragment_duration": 595.392,
+        "focus_mean": 0.42364663683273107,
+        "focus_std": NaN,
+        "focus_min": 0.42364663683273107,
+        "focus_max": 0.42364663683273107,
+        "focus_median": 0.42364663683273107,
+        "focus_q25": 0.42364663683273107,
+        "focus_q75": 0.42364663683273107,
+        "engagement_mean": 0.0,
+        "engagement_std": NaN,
+        "engagement_min": 0.0,
+        "engagement_max": 0.0,
+        "engagement_median": 0.0,
+        "engagement_q25": 0.0,
+        "engagement_q75": 0.0,
+        "alpha_mean": 0.0,
+        "beta_mean": 0.0,
+        "theta_mean": 0.0,
+        "gamma_mean": 0.0,
+        "meditation_mean": 0.0,
+        "mental_effort_mean": 0.0,
+        "cognitive_workload_mean": 0.0,
+        "alertness_mean": 0.6709907908060327,
+        "drowsiness_mean": 0.0,
+        "stress_mean": 0.0,
+        "focus_trend": 0.0,
+        "engagement_trend": 0.0,
+        "focus_stability": 1.0,
+        "engagement_stability": 0.0,
+        "focus_peaks": 0,
+        "engagement_peaks": 0,
+        "focus_engagement_corr": NaN,
+        "performance_category": "Moderate Performance",
+        "attention_profile": "Focus-Dominant"
+      },
+      "lsl_stream_20250809_175111": {
+        "video_id": "lsl_stream_20250809_175111",
+        "video_short": "175111",
+        "database": "video_embeddings",
+        "total_fragments": 1,
+        "total_duration": 595.84,
+        "avg_fragment_duration": 595.84,
+        "focus_mean": 0.5621840809662988,
+        "focus_std": NaN,
+        "focus_min": 0.5621840809662988,
+        "focus_max": 0.5621840809662988,
+        "focus_median": 0.5621840809662988,
+        "focus_q25": 0.5621840809662988,
+        "focus_q75": 0.5621840809662988,
+        "engagement_mean": 0.0,
+        "engagement_std": NaN,
+        "engagement_min": 0.0,
+        "engagement_max": 0.0,
+        "engagement_median": 0.0,
+        "engagement_q25": 0.0,
+        "engagement_q75": 0.0,
+        "alpha_mean": 0.0,
+        "beta_mean": 0.0,
+        "theta_mean": 0.0,
+        "gamma_mean": 0.0,
+        "meditation_mean": 0.0,
+        "mental_effort_mean": 0.0,
+        "cognitive_workload_mean": 0.0,
+        "alertness_mean": 0.4627627599628791,
+        "drowsiness_mean": 0.0,
+        "stress_mean": 0.0,
+        "focus_trend": 0.0,
+        "engagement_trend": 0.0,
+        "focus_stability": 1.0,
+        "engagement_stability": 0.0,
+        "focus_peaks": 0,
+        "engagement_peaks": 0,
+        "focus_engagement_corr": NaN,
+        "performance_category": "Moderate Performance",
+        "attention_profile": "Focus-Dominant"
+      },
+      "lsl_stream_20250809_175524": {
+        "video_id": "lsl_stream_20250809_175524",
+        "video_short": "175524",
+        "database": "video_embeddings",
+        "total_fragments": 1,
+        "total_duration": 110.592,
+        "avg_fragment_duration": 110.592,
+        "focus_mean": 0.6364161596627943,
+        "focus_std": NaN,
+        "focus_min": 0.6364161596627943,
+        "focus_max": 0.6364161596627943,
+        "focus_median": 0.6364161596627943,
+        "focus_q25": 0.6364161596627943,
+        "focus_q75": 0.6364161596627943,
+        "engagement_mean": 0.0,
+        "engagement_std": NaN,
+        "engagement_min": 0.0,
+        "engagement_max": 0.0,
+        "engagement_median": 0.0,
+        "engagement_q25": 0.0,
+        "engagement_q75": 0.0,
+        "alpha_mean": 0.0,
+        "beta_mean": 0.0,
+        "theta_mean": 0.0,
+        "gamma_mean": 0.0,
+        "meditation_mean": 0.0,
+        "mental_effort_mean": 0.0,
+        "cognitive_workload_mean": 0.0,
+        "alertness_mean": 0.3974136035731015,
+        "drowsiness_mean": 0.0,
+        "stress_mean": 0.0,
+        "focus_trend": 0.0,
+        "engagement_trend": 0.0,
+        "focus_stability": 1.0,
+        "engagement_stability": 0.0,
+        "focus_peaks": 0,
+        "engagement_peaks": 0,
+        "focus_engagement_corr": NaN,
+        "performance_category": "Moderate Performance",
+        "attention_profile": "Focus-Dominant"
+      },
+      "lsl_stream_20250809_175632": {
+        "video_id": "lsl_stream_20250809_175632",
+        "video_short": "175632",
+        "database": "video_embeddings",
+        "total_fragments": 1,
+        "total_duration": 599.808,
+        "avg_fragment_duration": 599.808,
+        "focus_mean": 1.0,
+        "focus_std": NaN,
+        "focus_min": 1.0,
+        "focus_max": 1.0,
+        "focus_median": 1.0,
+        "focus_q25": 1.0,
+        "focus_q75": 1.0,
+        "engagement_mean": 0.0,
+        "engagement_std": NaN,
+        "engagement_min": 0.0,
+        "engagement_max": 0.0,
+        "engagement_median": 0.0,
+        "engagement_q25": 0.0,
+        "engagement_q75": 0.0,
+        "alpha_mean": 0.0,
+        "beta_mean": 0.0,
+        "theta_mean": 0.0,
+        "gamma_mean": 0.0,
+        "meditation_mean": 0.0,
+        "mental_effort_mean": 0.0,
+        "cognitive_workload_mean": 0.0,
+        "alertness_mean": 0.9362559837241352,
+        "drowsiness_mean": 0.0,
+        "stress_mean": 0.0,
+        "focus_trend": 0.0,
+        "engagement_trend": 0.0,
+        "focus_stability": 1.0,
+        "engagement_stability": 0.0,
+        "focus_peaks": 0,
+        "engagement_peaks": 0,
+        "focus_engagement_corr": NaN,
+        "performance_category": "Moderate Performance",
+        "attention_profile": "Focus-Dominant"
+      }
+    }
+  },
+  "summary_stats": {
+    "video_embeddings_5s": {
+      "total_videos": 10,
+      "avg_focus": 0.5980447106568534,
+      "avg_engagement": 0.0,
+      "avg_stability": 0.7385698708539499,
+      "performance_distribution": {
+        "Moderate Performance": 10
+      }
+    },
+    "video_embeddings_20s": {
+      "total_videos": 10,
+      "avg_focus": 0.6051432765038663,
+      "avg_engagement": 0.0,
+      "avg_stability": 0.7471502536660765,
+      "performance_distribution": {
+        "Moderate Performance": 10
+      }
+    },
+    "video_embeddings": {
+      "total_videos": 10,
+      "avg_focus": 0.6532004046827213,
+      "avg_engagement": 0.0,
+      "avg_stability": 1.0,
+      "performance_distribution": {
+        "Moderate Performance": 10
+      }
+    }
+  }
+};
+        let currentDb = reportData.databases[0];
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            updateDisplay();
+        });
+        
+        function updateDisplay() {
+            currentDb = document.getElementById('database-select').value;
+            updateSummaryStats();
+            updateVideoTable();
+            createFocusEngagementChart();
+            createPerformanceChart();
+            createBrainwaveChart();
+            createStabilityChart();
+        }
+        
+        function updateSummaryStats() {
+            const stats = reportData.video_stats[currentDb];
+            const videos = Object.values(stats);
+            
+            const avgFocus = videos.reduce((sum, v) => sum + v.focus_mean, 0) / videos.length;
+            const avgEngagement = videos.reduce((sum, v) => sum + v.engagement_mean, 0) / videos.length;
+            const totalFragments = videos.reduce((sum, v) => sum + v.total_fragments, 0);
+            const avgStability = videos.reduce((sum, v) => sum + v.focus_stability, 0) / videos.length;
+            
+            const summaryHtml = `
+                <div class="stat-card">
+                    <div class="stat-value">${(avgFocus * 100).toFixed(1)}%</div>
+                    <div><i class="fas fa-bullseye"></i> Average Focus</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${(avgEngagement * 100).toFixed(1)}%</div>
+                    <div><i class="fas fa-heart"></i> Average Engagement</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${videos.length}</div>
+                    <div><i class="fas fa-video"></i> Videos Analyzed</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${totalFragments}</div>
+                    <div><i class="fas fa-puzzle-piece"></i> Total Fragments</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${(avgStability * 100).toFixed(1)}%</div>
+                    <div><i class="fas fa-balance-scale"></i> Average Stability</div>
+                </div>
+            `;
+            document.getElementById('summary-stats').innerHTML = summaryHtml;
+        }
+        
+        function updateVideoTable() {
+            const stats = reportData.video_stats[currentDb];
+            
+            let tableHtml = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Video ID</th>
+                            <th>Focus Mean</th>
+                            <th>Engagement Mean</th>
+                            <th>Focus Stability</th>
+                            <th>Performance</th>
+                            <th>Profile</th>
+                            <th>Fragments</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            Object.values(stats).forEach(video => {
+                const performanceClass = video.performance_category.toLowerCase().replace(' ', '-');
+                tableHtml += `
+                    <tr>
+                        <td><strong>${video.video_short}</strong></td>
+                        <td>${(video.focus_mean * 100).toFixed(1)}%</td>
+                        <td>${(video.engagement_mean * 100).toFixed(1)}%</td>
+                        <td>${(video.focus_stability * 100).toFixed(1)}%</td>
+                        <td><span class="performance-tag ${performanceClass}">${video.performance_category}</span></td>
+                        <td>${video.attention_profile}</td>
+                        <td>${video.total_fragments}</td>
+                    </tr>
+                `;
+            });
+            
+            tableHtml += '</tbody></table>';
+            document.getElementById('video-stats-table').innerHTML = tableHtml;
+        }
+        
+        function createFocusEngagementChart() {
+            const stats = reportData.video_stats[currentDb];
+            const videos = Object.values(stats);
+            
+            const trace = {
+                x: videos.map(v => v.focus_mean),
+                y: videos.map(v => v.engagement_mean),
+                mode: 'markers+text',
+                type: 'scatter',
+                text: videos.map(v => v.video_short),
+                textposition: 'top center',
+                marker: {
+                    size: videos.map(v => v.total_fragments / 10 + 8),
+                    color: videos.map(v => v.focus_stability),
+                    colorscale: 'Viridis',
+                    showscale: true,
+                    colorbar: {title: 'Stability'}
+                }
+            };
+            
+            const layout = {
+                xaxis: {title: 'Focus Level', range: [0, 1]},
+                yaxis: {title: 'Engagement Level', range: [0, 1]},
+                height: 400
+            };
+            
+            Plotly.newPlot('focus-engagement-chart', [trace], layout, {responsive: true});
+        }
+        
+        function createPerformanceChart() {
+            const stats = reportData.video_stats[currentDb];
+            const videos = Object.values(stats);
+            
+            const performanceCounts = {};
+            videos.forEach(v => {
+                performanceCounts[v.performance_category] = (performanceCounts[v.performance_category] || 0) + 1;
+            });
+            
+            const trace = {
+                labels: Object.keys(performanceCounts),
+                values: Object.values(performanceCounts),
+                type: 'pie',
+                marker: {
+                    colors: ['#4caf50', '#8bc34a', '#ff9800', '#f44336']
+                }
+            };
+            
+            const layout = {
+                height: 400,
+                showlegend: true
+            };
+            
+            Plotly.newPlot('performance-chart', [trace], layout, {responsive: true});
+        }
+        
+        function createBrainwaveChart() {
+            const stats = reportData.video_stats[currentDb];
+            const videos = Object.values(stats);
+            
+            const traces = [
+                {
+                    x: videos.map(v => v.video_short),
+                    y: videos.map(v => v.alpha_mean),
+                    name: 'Alpha',
+                    type: 'bar'
+                },
+                {
+                    x: videos.map(v => v.video_short),
+                    y: videos.map(v => v.beta_mean),
+                    name: 'Beta',
+                    type: 'bar'
+                },
+                {
+                    x: videos.map(v => v.video_short),
+                    y: videos.map(v => v.theta_mean),
+                    name: 'Theta',
+                    type: 'bar'
+                },
+                {
+                    x: videos.map(v => v.video_short),
+                    y: videos.map(v => v.gamma_mean),
+                    name: 'Gamma',
+                    type: 'bar'
+                }
+            ];
+            
+            const layout = {
+                xaxis: {title: 'Video ID', tickangle: 45},
+                yaxis: {title: 'Brainwave Power'},
+                height: 400,
+                barmode: 'group'
+            };
+            
+            Plotly.newPlot('brainwave-chart', traces, layout, {responsive: true});
+        }
+        
+        function createStabilityChart() {
+            const stats = reportData.video_stats[currentDb];
+            const videos = Object.values(stats);
+            
+            const trace = {
+                x: videos.map(v => v.video_short),
+                y: videos.map(v => v.focus_stability),
+                type: 'bar',
+                marker: {color: '#667eea'},
+                name: 'Focus Stability'
+            };
+            
+            const layout = {
+                xaxis: {title: 'Video ID', tickangle: 45},
+                yaxis: {title: 'Stability Score', range: [0, 1]},
+                height: 400
+            };
+            
+            Plotly.newPlot('stability-chart', [trace], layout, {responsive: true});
+        }
+    </script>
+</body>
+</html>

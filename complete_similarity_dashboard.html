@@ -1,0 +1,877 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EEG Video Similarity Multi-Database Dashboard</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #667eea;
+        }
+        
+        .header h1 {
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+        
+        .database-selector {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #e8f5e8;
+            border-radius: 10px;
+            border-left: 5px solid #4caf50;
+        }
+        
+        .database-selector label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: #2e7d32;
+        }
+        
+        .database-selector select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        
+        .heatmap-container {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+        }
+        
+        .viz-title {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #667eea;
+            text-align: center;
+        }
+        
+        .video-ids-display {
+            background: #fff3e0;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-left: 5px solid #ff9800;
+        }
+        
+        .video-id-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .video-id-item {
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            border-left: 3px solid #ff9800;
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+        
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        @media (max-width: 1200px) {
+            .comparison-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        #plotly-div {
+            width: 100%;
+            height: 600px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧠 EEG Video Similarity Multi-Database Dashboard</h1>
+            <p>Compare video embedding similarities across different fragment durations</p>
+            
+            <div style="background: #e1f5fe; padding: 20px; border-radius: 10px; margin-top: 20px; text-align: left;">
+                <h3 style="color: #0277bd; margin-top: 0;">📖 What Each Dashboard Represents:</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px;">
+                    <div style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #4caf50;">
+                        <strong>🔸 5s Fragments (996 total)</strong><br>
+                        <em>High temporal resolution</em><br>
+                        Captures rapid neural state changes and micro-patterns in EEG signals
+                    </div>
+                    <div style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #ff9800;">
+                        <strong>🔸 20s Fragments (243 total)</strong><br>
+                        <em>Medium temporal resolution</em><br>
+                        Captures sustained neural patterns and cognitive state transitions
+                    </div>
+                    <div style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #9c27b0;">
+                        <strong>🔸 Full Video (10 total)</strong><br>
+                        <em>Complete session analysis</em><br>
+                        Represents overall neural signature and cognitive profile per video
+                    </div>
+                </div>
+                <p style="margin-bottom: 0; margin-top: 15px; font-style: italic; color: #0277bd;">
+                    💡 <strong>Key Insight:</strong> Higher similarity scores between videos in different temporal scales indicate robust neural patterns that persist across time.
+                </p>
+            </div>
+        </div>
+        
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value">1249</div>
+                <div class="stat-label">Total Fragments</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">10</div>
+                <div class="stat-label">Unique Videos</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">3</div>
+                <div class="stat-label">Databases</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">768</div>
+                <div class="stat-label">Embedding Dimensions</div>
+            </div>
+        </div>
+        
+        <div class="video-ids-display">
+            <h3>📹 Video IDs in Dataset</h3>
+            <p>The following 10 videos are analyzed across all fragment durations:</p>
+            <div class="video-id-grid">
+                <div class="video-id-item"><strong>1.</strong> lsl_stream_20250809_154545</div>
+<div class="video-id-item"><strong>2.</strong> lsl_stream_20250809_155123</div>
+<div class="video-id-item"><strong>3.</strong> lsl_stream_20250809_155739</div>
+<div class="video-id-item"><strong>4.</strong> lsl_stream_20250809_160350</div>
+<div class="video-id-item"><strong>5.</strong> lsl_stream_20250809_173815</div>
+<div class="video-id-item"><strong>6.</strong> lsl_stream_20250809_174138</div>
+<div class="video-id-item"><strong>7.</strong> lsl_stream_20250809_174635</div>
+<div class="video-id-item"><strong>8.</strong> lsl_stream_20250809_175111</div>
+<div class="video-id-item"><strong>9.</strong> lsl_stream_20250809_175524</div>
+<div class="video-id-item"><strong>10.</strong> lsl_stream_20250809_175632</div>
+            </div>
+        </div>
+        
+        <div class="database-selector">
+            <h3>🗄️ Database Selection</h3>
+            <label for="database-select">Select Fragment Duration Database:</label>
+            <select id="database-select" onchange="updateVisualization()">
+                <option value="video_embeddings_5s">5s Fragments (996 total - High Resolution)</option>
+<option value="video_embeddings_20s">20s Fragments (243 total - Medium Resolution)</option>
+<option value="video_embeddings">Full Video Embeddings (10 videos - Complete Sessions)</option>
+            </select>
+            
+            <div style="margin-top: 15px; padding: 15px; background: #fff3e0; border-radius: 8px; border-left: 4px solid #ff9800;">
+                <strong>🎯 Current View:</strong> <span id="current-description">Select a database to see its description</span>
+            </div>
+        </div>
+        
+        <div class="comparison-grid">
+            <div class="heatmap-container">
+                <div class="viz-title">🔥 Video Similarity Heatmap</div>
+                <div id="heatmap-plot"></div>
+            </div>
+            <div class="heatmap-container">
+                <div class="viz-title">📊 Similarity Statistics</div>
+                <div id="stats-plot"></div>
+            </div>
+        </div>
+        
+        <div class="heatmap-container">
+            <div class="viz-title">📈 Cross-Database Comparison</div>
+            <div id="comparison-plot"></div>
+        </div>
+    </div>
+
+    <script>
+        // Data from Python
+        const allMatricesData = {
+  "video_embeddings_5s": {
+    "similarity_matrix": [
+      [
+        1.0,
+        0.07110585272312164,
+        0.7733588218688965,
+        0.99517822265625,
+        0.06177026033401489,
+        0.053389184176921844,
+        0.8781070113182068,
+        0.9116469621658325,
+        0.8503531217575073,
+        0.8464294075965881
+      ],
+      [
+        0.07110585272312164,
+        1.0,
+        0.07775763422250748,
+        0.0705147460103035,
+        0.9563589692115784,
+        0.8725154399871826,
+        0.3304694592952728,
+        0.3203081786632538,
+        0.3124823570251465,
+        0.31244006752967834
+      ],
+      [
+        0.7733588218688965,
+        0.07775763422250748,
+        0.9999998807907104,
+        0.7106890082359314,
+        0.0663815587759018,
+        0.05210186168551445,
+        0.6454190611839294,
+        0.6610457301139832,
+        0.6447235345840454,
+        0.6433972120285034
+      ],
+      [
+        0.99517822265625,
+        0.0705147460103035,
+        0.7106890082359314,
+        1.0,
+        0.060890041291713715,
+        0.052915308624506,
+        0.8870773315429688,
+        0.9195735454559326,
+        0.8566709160804749,
+        0.8526830673217773
+      ],
+      [
+        0.06177026033401489,
+        0.9563589692115784,
+        0.0663815587759018,
+        0.060890041291713715,
+        0.9999998807907104,
+        0.9770084023475647,
+        0.24052292108535767,
+        0.26497703790664673,
+        0.2407309114933014,
+        0.24048425257205963
+      ],
+      [
+        0.053389184176921844,
+        0.8725154399871826,
+        0.05210186168551445,
+        0.052915308624506,
+        0.9770084023475647,
+        0.9999999403953552,
+        0.1683310717344284,
+        0.21584314107894897,
+        0.1828683614730835,
+        0.18260805308818817
+      ],
+      [
+        0.8781070113182068,
+        0.3304694592952728,
+        0.6454190611839294,
+        0.8870773315429688,
+        0.24052292108535767,
+        0.1683310717344284,
+        0.9999999403953552,
+        0.9700411558151245,
+        0.9663946628570557,
+        0.9657189846038818
+      ],
+      [
+        0.9116469621658325,
+        0.3203081786632538,
+        0.6610457301139832,
+        0.9195735454559326,
+        0.26497703790664673,
+        0.21584314107894897,
+        0.9700411558151245,
+        1.0,
+        0.9848669171333313,
+        0.9832014441490173
+      ],
+      [
+        0.8503531217575073,
+        0.3124823570251465,
+        0.6447235345840454,
+        0.8566709160804749,
+        0.2407309114933014,
+        0.1828683614730835,
+        0.9663946628570557,
+        0.9848669171333313,
+        1.0,
+        0.9999489784240723
+      ],
+      [
+        0.8464294075965881,
+        0.31244006752967834,
+        0.6433972120285034,
+        0.8526830673217773,
+        0.24048425257205963,
+        0.18260805308818817,
+        0.9657189846038818,
+        0.9832014441490173,
+        0.9999489784240723,
+        1.0000001192092896
+      ]
+    ],
+    "video_ids": [
+      "lsl_stream_20250809_154545",
+      "lsl_stream_20250809_155123",
+      "lsl_stream_20250809_155739",
+      "lsl_stream_20250809_160350",
+      "lsl_stream_20250809_173815",
+      "lsl_stream_20250809_174138",
+      "lsl_stream_20250809_174635",
+      "lsl_stream_20250809_175111",
+      "lsl_stream_20250809_175524",
+      "lsl_stream_20250809_175632"
+    ],
+    "video_short_names": [
+      "154545",
+      "155123",
+      "155739",
+      "160350",
+      "173815",
+      "174138",
+      "174635",
+      "175111",
+      "175524",
+      "175632"
+    ],
+    "fragment_duration": 5.0,
+    "total_fragments": 996
+  },
+  "video_embeddings_20s": {
+    "similarity_matrix": [
+      [
+        0.9999998807907104,
+        0.058812323957681656,
+        0.6947638392448425,
+        0.9509749412536621,
+        0.0459442138671875,
+        0.04905736446380615,
+        0.7623412013053894,
+        0.8145594596862793,
+        0.7665855288505554,
+        0.7654522657394409
+      ],
+      [
+        0.058812323957681656,
+        1.0,
+        0.02751089632511139,
+        0.06554900109767914,
+        0.9547039270401001,
+        0.8714622259140015,
+        0.3259476125240326,
+        0.3152827024459839,
+        0.30546247959136963,
+        0.30596625804901123
+      ],
+      [
+        0.6947638392448425,
+        0.02751089632511139,
+        1.000000238418579,
+        0.4478839933872223,
+        0.039539583027362823,
+        0.03061741404235363,
+        0.23322823643684387,
+        0.2721613049507141,
+        0.3020502030849457,
+        0.3021233379840851
+      ],
+      [
+        0.9509749412536621,
+        0.06554900109767914,
+        0.4478839933872223,
+        0.9999997615814209,
+        0.046697355806827545,
+        0.052195239812135696,
+        0.866269052028656,
+        0.9133334755897522,
+        0.8442932367324829,
+        0.8429152965545654
+      ],
+      [
+        0.0459442138671875,
+        0.9547039270401001,
+        0.039539583027362823,
+        0.046697355806827545,
+        1.0,
+        0.9760868549346924,
+        0.22516128420829773,
+        0.25201642513275146,
+        0.22636355459690094,
+        0.22684352099895477
+      ],
+      [
+        0.04905736446380615,
+        0.8714622259140015,
+        0.03061741404235363,
+        0.052195239812135696,
+        0.9760868549346924,
+        1.0,
+        0.1654984951019287,
+        0.2179757058620453,
+        0.18162667751312256,
+        0.1820565015077591
+      ],
+      [
+        0.7623412013053894,
+        0.3259476125240326,
+        0.23322823643684387,
+        0.866269052028656,
+        0.22516128420829773,
+        0.1654984951019287,
+        1.0,
+        0.9724535346031189,
+        0.9594357013702393,
+        0.9591079950332642
+      ],
+      [
+        0.8145594596862793,
+        0.3152827024459839,
+        0.2721613049507141,
+        0.9133334755897522,
+        0.25201642513275146,
+        0.2179757058620453,
+        0.9724535346031189,
+        0.9999999403953552,
+        0.9767049551010132,
+        0.9760904312133789
+      ],
+      [
+        0.7665855288505554,
+        0.30546247959136963,
+        0.3020502030849457,
+        0.8442932367324829,
+        0.22636355459690094,
+        0.18162667751312256,
+        0.9594357013702393,
+        0.9767049551010132,
+        1.0,
+        0.9999948143959045
+      ],
+      [
+        0.7654522657394409,
+        0.30596625804901123,
+        0.3021233379840851,
+        0.8429152965545654,
+        0.22684352099895477,
+        0.1820565015077591,
+        0.9591079950332642,
+        0.9760904312133789,
+        0.9999948143959045,
+        1.0
+      ]
+    ],
+    "video_ids": [
+      "lsl_stream_20250809_154545",
+      "lsl_stream_20250809_155123",
+      "lsl_stream_20250809_155739",
+      "lsl_stream_20250809_160350",
+      "lsl_stream_20250809_173815",
+      "lsl_stream_20250809_174138",
+      "lsl_stream_20250809_174635",
+      "lsl_stream_20250809_175111",
+      "lsl_stream_20250809_175524",
+      "lsl_stream_20250809_175632"
+    ],
+    "video_short_names": [
+      "154545",
+      "155123",
+      "155739",
+      "160350",
+      "173815",
+      "174138",
+      "174635",
+      "175111",
+      "175524",
+      "175632"
+    ],
+    "fragment_duration": 20.0,
+    "total_fragments": 243
+  },
+  "video_embeddings": {
+    "similarity_matrix": [
+      [
+        0.9999999403953552,
+        0.022938599810004234,
+        0.9736915230751038,
+        0.9944799542427063,
+        0.1805848479270935,
+        0.1361808329820633,
+        0.0615588054060936,
+        0.6580784320831299,
+        0.4126947820186615,
+        0.8446617126464844
+      ],
+      [
+        0.022938599810004234,
+        1.0,
+        0.030107391998171806,
+        0.0274377278983593,
+        0.6622911691665649,
+        0.5781545042991638,
+        0.32628101110458374,
+        0.2722492218017578,
+        0.2932589650154114,
+        0.14840875566005707
+      ],
+      [
+        0.9736915230751038,
+        0.030107391998171806,
+        1.0,
+        0.9542056322097778,
+        0.27749723196029663,
+        0.22909705340862274,
+        0.019237607717514038,
+        0.668143630027771,
+        0.4033035635948181,
+        0.8947451710700989
+      ],
+      [
+        0.9944799542427063,
+        0.0274377278983593,
+        0.9542056322097778,
+        0.9999999403953552,
+        0.17324212193489075,
+        0.13044896721839905,
+        0.14125804603099823,
+        0.7010450959205627,
+        0.4705416262149811,
+        0.8449975252151489
+      ],
+      [
+        0.1805848479270935,
+        0.6622911691665649,
+        0.27749723196029663,
+        0.17324212193489075,
+        1.0,
+        0.9839916229248047,
+        0.15497025847434998,
+        0.38769927620887756,
+        0.2752913236618042,
+        0.36897656321525574
+      ],
+      [
+        0.1361808329820633,
+        0.5781545042991638,
+        0.22909705340862274,
+        0.13044896721839905,
+        0.9839916229248047,
+        1.0000001192092896,
+        0.10195282101631165,
+        0.3222373127937317,
+        0.21168974041938782,
+        0.2983042597770691
+      ],
+      [
+        0.0615588054060936,
+        0.32628101110458374,
+        0.019237607717514038,
+        0.14125804603099823,
+        0.15497025847434998,
+        0.10195282101631165,
+        0.9999998807907104,
+        0.7215218544006348,
+        0.8817993998527527,
+        0.37005504965782166
+      ],
+      [
+        0.6580784320831299,
+        0.2722492218017578,
+        0.668143630027771,
+        0.7010450959205627,
+        0.38769927620887756,
+        0.3222373127937317,
+        0.7215218544006348,
+        0.9999999403953552,
+        0.9269143342971802,
+        0.8945412039756775
+      ],
+      [
+        0.4126947820186615,
+        0.2932589650154114,
+        0.4033035635948181,
+        0.4705416262149811,
+        0.2752913236618042,
+        0.21168974041938782,
+        0.8817993998527527,
+        0.9269143342971802,
+        0.9999999403953552,
+        0.7221940755844116
+      ],
+      [
+        0.8446617126464844,
+        0.14840875566005707,
+        0.8947451710700989,
+        0.8449975252151489,
+        0.36897656321525574,
+        0.2983042597770691,
+        0.37005504965782166,
+        0.8945412039756775,
+        0.7221940755844116,
+        1.0
+      ]
+    ],
+    "video_ids": [
+      "lsl_stream_20250809_154545",
+      "lsl_stream_20250809_155123",
+      "lsl_stream_20250809_155739",
+      "lsl_stream_20250809_160350",
+      "lsl_stream_20250809_173815",
+      "lsl_stream_20250809_174138",
+      "lsl_stream_20250809_174635",
+      "lsl_stream_20250809_175111",
+      "lsl_stream_20250809_175524",
+      "lsl_stream_20250809_175632"
+    ],
+    "video_short_names": [
+      "154545",
+      "155123",
+      "155739",
+      "160350",
+      "173815",
+      "174138",
+      "174635",
+      "175111",
+      "175524",
+      "175632"
+    ],
+    "fragment_duration": 599.808,
+    "total_fragments": 10
+  }
+};
+        const videoIds = ["lsl_stream_20250809_154545", "lsl_stream_20250809_155123", "lsl_stream_20250809_155739", "lsl_stream_20250809_160350", "lsl_stream_20250809_173815", "lsl_stream_20250809_174138", "lsl_stream_20250809_174635", "lsl_stream_20250809_175111", "lsl_stream_20250809_175524", "lsl_stream_20250809_175632"];
+        const videoShortNames = ["154545", "155123", "155739", "160350", "173815", "174138", "174635", "175111", "175524", "175632"];
+        const dbInfo = {"video_embeddings_5s": {"duration": 5.0, "fragments": 996}, "video_embeddings_20s": {"duration": 20.0, "fragments": 243}, "video_embeddings": {"duration": 599.808, "fragments": 10}};
+        
+        let currentDatabase = Object.keys(allMatricesData)[0];
+        
+        // Create video similarity heatmap
+        function createSimilarityHeatmap(dbName) {
+            const data = allMatricesData[dbName];
+            
+            const trace = {
+                z: data.similarity_matrix,
+                x: data.video_short_names,
+                y: data.video_short_names,
+                type: 'heatmap',
+                colorscale: 'Viridis',
+                hoverongaps: false,
+                hovertemplate: 'Video Y: %{y}<br>Video X: %{x}<br>Similarity: %{z:.4f}<extra></extra>',
+                colorbar: {
+                    title: 'Cosine Similarity',
+                    titleside: 'right'
+                }
+            };
+            
+            const layout = {
+                title: `Video Similarity Matrix - ${dbName.replace('video_embeddings_', '').replace('s', '')}s Fragments`,
+                xaxis: {
+                    title: 'Video IDs',
+                    tickangle: 45,
+                    tickfont: {size: 10}
+                },
+                yaxis: {
+                    title: 'Video IDs',
+                    tickfont: {size: 10}
+                },
+                height: 500,
+                margin: {l: 100, r: 50, t: 80, b: 100}
+            };
+            
+            Plotly.newPlot('heatmap-plot', [trace], layout, {responsive: true});
+        }
+        
+        // Create similarity statistics plot
+        function createStatsPlot(dbName) {
+            const data = allMatricesData[dbName];
+            const matrix = data.similarity_matrix;
+            
+            // Calculate statistics for each video
+            const stats = data.video_short_names.map((name, i) => {
+                const row = matrix[i];
+                const otherSimilarities = row.filter((_, j) => i !== j); // Exclude self-similarity
+                return {
+                    video: name,
+                    avg_similarity: otherSimilarities.reduce((a, b) => a + b, 0) / otherSimilarities.length,
+                    max_similarity: Math.max(...otherSimilarities),
+                    min_similarity: Math.min(...otherSimilarities)
+                };
+            });
+            
+            const trace1 = {
+                x: stats.map(s => s.video),
+                y: stats.map(s => s.avg_similarity),
+                type: 'bar',
+                name: 'Average Similarity',
+                marker: {color: '#667eea'}
+            };
+            
+            const trace2 = {
+                x: stats.map(s => s.video),
+                y: stats.map(s => s.max_similarity),
+                type: 'scatter',
+                mode: 'markers',
+                name: 'Max Similarity',
+                marker: {color: '#f5576c', size: 8}
+            };
+            
+            const layout = {
+                title: `Similarity Statistics - ${dbName.replace('video_embeddings_', '').replace('s', '')}s Fragments`,
+                xaxis: {
+                    title: 'Video IDs',
+                    tickangle: 45
+                },
+                yaxis: {title: 'Similarity Score'},
+                height: 500,
+                showlegend: true
+            };
+            
+            Plotly.newPlot('stats-plot', [trace1, trace2], layout, {responsive: true});
+        }
+        
+        // Create cross-database comparison
+        function createComparisonPlot() {
+            const dbNames = Object.keys(allMatricesData);
+            
+            // Calculate average similarity for each database
+            const comparisonData = dbNames.map(dbName => {
+                const matrix = allMatricesData[dbName].similarity_matrix;
+                const n = matrix.length;
+                let totalSim = 0;
+                let count = 0;
+                
+                for (let i = 0; i < n; i++) {
+                    for (let j = 0; j < n; j++) {
+                        if (i !== j) {
+                            totalSim += matrix[i][j];
+                            count++;
+                        }
+                    }
+                }
+                
+                return {
+                    database: dbName.replace('video_embeddings_', '').replace('s', '') + 's',
+                    avg_similarity: totalSim / count,
+                    fragment_count: allMatricesData[dbName].total_fragments,
+                    duration: allMatricesData[dbName].fragment_duration
+                };
+            });
+            
+            const trace1 = {
+                x: comparisonData.map(d => d.database),
+                y: comparisonData.map(d => d.avg_similarity),
+                type: 'bar',
+                name: 'Avg Similarity',
+                marker: {color: '#4caf50'},
+                yaxis: 'y'
+            };
+            
+            const trace2 = {
+                x: comparisonData.map(d => d.database),
+                y: comparisonData.map(d => d.fragment_count),
+                type: 'scatter',
+                mode: 'lines+markers',
+                name: 'Fragment Count',
+                marker: {color: '#ff9800', size: 8},
+                line: {color: '#ff9800', width: 3},
+                yaxis: 'y2'
+            };
+            
+            const layout = {
+                title: 'Cross-Database Comparison',
+                xaxis: {title: 'Fragment Duration'},
+                yaxis: {
+                    title: 'Average Similarity',
+                    side: 'left'
+                },
+                yaxis2: {
+                    title: 'Fragment Count',
+                    side: 'right',
+                    overlaying: 'y'
+                },
+                height: 500,
+                showlegend: true
+            };
+            
+            Plotly.newPlot('comparison-plot', [trace1, trace2], layout, {responsive: true});
+        }
+        
+        // Update visualization based on selected database
+        function updateVisualization() {
+            const selectedDb = document.getElementById('database-select').value;
+            currentDatabase = selectedDb;
+            
+            createSimilarityHeatmap(selectedDb);
+            createStatsPlot(selectedDb);
+        }
+        
+        // Initialize visualizations
+        document.addEventListener('DOMContentLoaded', function() {
+            createSimilarityHeatmap(currentDatabase);
+            createStatsPlot(currentDatabase);
+            createComparisonPlot();
+        });
+    </script>
+</body>
+</html>
+        

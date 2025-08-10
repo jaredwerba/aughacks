@@ -144,19 +144,23 @@ class NeuroLMEmbeddingExtractor:
                 # Step 2: Extract embeddings from attention model
                 token_tensor = torch.tensor(tokens, dtype=torch.long).unsqueeze(0)
                 
-                # Get hidden states (embeddings) from the model
-                embeddings = self.attention_model.get_embeddings(token_tensor)
+                # Get attention embeddings from the model
+                embeddings = self.attention_model.get_attention_embeddings(token_tensor)
                 
                 if embeddings is None:
                     logger.error("❌ Failed to extract embeddings from model")
                     return None
+                
+                # Ensure embeddings is a PyTorch tensor
+                if isinstance(embeddings, np.ndarray):
+                    embeddings = torch.from_numpy(embeddings)
                 
                 # Average embeddings across sequence length to get fixed-size representation
                 if embeddings.dim() == 3:  # (batch, seq_len, embed_dim)
                     embeddings = torch.mean(embeddings, dim=1)  # (batch, embed_dim)
                 
                 # Convert to numpy
-                embeddings_np = embeddings.cpu().numpy()
+                embeddings_np = embeddings.detach().cpu().numpy()
                 
                 logger.info(f"✅ Extracted embeddings: shape {embeddings_np.shape}")
                 return embeddings_np
