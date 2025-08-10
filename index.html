@@ -1,0 +1,45 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>ESP32 Snapshot</title>
+  <style>
+    body { font-family: system-ui, Arial, sans-serif; margin: 2rem; }
+    button { padding: .6rem 1rem; font-size: 1rem; }
+    #img { display:block; margin-top: 1rem; max-width: 100%; }
+    #status { margin-left: .5rem; color: #666; }
+  </style>
+</head>
+<body>
+  <h1>ESP32 Camera – Snapshot</h1>
+  <button id="snap">Take snapshot</button>
+  <span id="status"></span>
+  <h2>Live stream</h2>
+  <img src="http://10.224.210.1/stream" style="max-width:100%" />
+  <img id="img" alt="snapshot will appear here" />
+
+  <script>
+    const ESP = "http://10.224.210.1"; 
+    const btn = document.getElementById('snap');
+    const img = document.getElementById('img');
+    const status = document.getElementById('status');
+
+    async function snapshot() {
+      status.textContent = "capturing…";
+      try {
+        // cache-bust so we always get a fresh frame
+        const r = await fetch(`${ESP}/capture?ts=${Date.now()}`);
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        const blob = await r.blob();
+        const url = URL.createObjectURL(blob);
+        img.src = url;
+        status.textContent = "done";
+      } catch (e) {
+        console.error(e);
+        status.textContent = "error: " + e.message;
+      }
+    }
+    btn.addEventListener('click', snapshot);
+  </script>
+</body>
+</html>
