@@ -39,7 +39,7 @@ class LSLNeuroLMProcessor:
         
         # EEG data buffer for real-time processing
         self.eeg_buffer = deque(maxlen=self.config['buffer_size'])
-        self.channel_names = ['Fp1', 'Fp2', 'F7', 'F3', 'FZ', 'F4', 'F8', 'C2']
+        self.channel_names = ['channel_1', 'channel_2', 'channel_3', 'channel_4', 'channel_5', 'channel_6']
         
         # NeuroLM components
         self.tokenizer = None
@@ -72,15 +72,22 @@ class LSLNeuroLMProcessor:
         }
     
     async def initialize_neurolm(self) -> bool:
-        """Initialize NeuroLM components"""
+        """Initialize NeuroLM components with pre-trained weights"""
         try:
-            logger.info("🔧 Initializing NeuroLM components...")
+            logger.info("🔧 Initializing NeuroLM components with pre-trained weights...")
             
-            # Tokenizer configuration
+            # Check for local checkpoints
+            neurolm_b_path = Path.home() / "Downloads" / "NeuroLM-B.pt"
+            vq_path = Path.home() / "Downloads" / "VQ.pt"
+            
+            logger.info(f"🔍 Checking for NeuroLM-B checkpoint: {neurolm_b_path}")
+            logger.info(f"🔍 Checking for VQ checkpoint: {vq_path}")
+            
+            # Tokenizer configuration (adjusted for 6 channels like in successful analysis)
             tokenizer_config = NeuroTokenizerConfig(
                 sampling_rate=self.config['sampling_rate'],
                 window_size=self.config['window_size'],
-                n_channels=8,
+                n_channels=6,  # Match the successful analysis configuration
                 n_embed=8192,
                 embed_dim=128
             )
@@ -96,12 +103,49 @@ class LSLNeuroLMProcessor:
                 n_engagement_classes=3
             )
             
-            # HuggingFace configuration
-            hf_config = HuggingFaceNeuroLMConfig()
-            
             # Initialize components
             self.tokenizer = NeuroLMTokenizer(tokenizer_config)
             self.attention_model = NeuroLMAttentionModel(attention_config)
+            
+            # Load pre-trained weights if available
+            if neurolm_b_path.exists() and vq_path.exists():
+                logger.info("🎯 Loading pre-trained NeuroLM-B weights...")
+                
+                try:
+                    # Load VQ encoder weights
+                    vq_checkpoint = torch.load(vq_path, map_location='cpu', weights_only=False)
+                    if hasattr(self.tokenizer, 'quantizer') and isinstance(vq_checkpoint, dict):
+                        if 'embedding.weight' in vq_checkpoint:
+                            self.tokenizer.quantizer.embedding.weight.data = vq_checkpoint['embedding.weight']
+                            logger.info("✅ VQ encoder weights loaded")
+                    
+                    # Load NeuroLM-B model weights
+                    neurolm_checkpoint = torch.load(neurolm_b_path, map_location='cpu', weights_only=False)
+                    if isinstance(neurolm_checkpoint, dict):
+                        # Load compatible weights into attention model
+                        model_state = self.attention_model.state_dict()
+                        loaded_weights = 0
+                        
+                        for key, value in neurolm_checkpoint.items():
+                            if key in model_state and model_state[key].shape == value.shape:
+                                model_state[key] = value
+                                loaded_weights += 1
+                        
+                        self.attention_model.load_state_dict(model_state, strict=False)
+                        logger.info(f"✅ NeuroLM-B weights loaded ({loaded_weights} layers)")
+                    
+                    logger.info("🎯 Pre-trained models loaded successfully!")
+                    
+                except Exception as e:
+                    logger.warning(f"⚠️ Failed to load pre-trained weights: {e}")
+                    logger.info("🔄 Using randomly initialized weights")
+            else:
+                logger.warning("⚠️ Pre-trained checkpoints not found, using random initialization")
+                logger.info(f"📂 Expected: {neurolm_b_path}")
+                logger.info(f"📂 Expected: {vq_path}")
+            
+            # HuggingFace configuration (fallback)
+            hf_config = HuggingFaceNeuroLMConfig()
             self.hf_system = HuggingFaceNeuroLMLoader(hf_config)
             
             logger.info("✅ NeuroLM components initialized successfully!")
@@ -115,7 +159,7 @@ class LSLNeuroLMProcessor:
         """Parse a single line from LSL CSV format"""
         try:
             parts = line.strip().split(',')
-            if len(parts) < 11:  # unix_timestamp + lsl_timestamp + system_time + 8 channels
+            if len(parts) < 9:  # unix_timestamp + lsl_timestamp + system_time + 6 channels
                 return None
             
             # Extract timestamps and EEG data
@@ -123,8 +167,8 @@ class LSLNeuroLMProcessor:
             lsl_timestamp = float(parts[1])
             system_time = parts[2]
             
-            # Extract 8 EEG channels (skip any extra columns)
-            eeg_channels = [float(parts[i]) for i in range(3, 11)]
+            # Extract 6 EEG channels (matching successful analysis)
+            eeg_channels = [float(parts[i]) for i in range(3, 9)]
             
             return {
                 'unix_timestamp': unix_timestamp,
